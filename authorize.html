@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>平台授权</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .auth-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+        
+        .platform-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .platform-logo.douyin {
+            background: linear-gradient(135deg, #000 0%, #333 100%);
+            color: white;
+        }
+        
+        .platform-logo.xiaohongshu {
+            background: linear-gradient(135deg, #ff2442 0%, #ff6b8a 100%);
+            color: white;
+        }
+        
+        .platform-logo.bilibili {
+            background: linear-gradient(135deg, #00a1d6 0%, #3eb871 100%);
+            color: white;
+        }
+        
+        h1 {
+            font-size: 24px;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        
+        .auth-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        
+        .auth-info h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .auth-info ul {
+            list-style: none;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .auth-info li {
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .auth-info li::before {
+            content: '✓';
+            color: #07c160;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+        
+        .btn-primary {
+            background: #07c160;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #06ad56;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+        
+        .success-message {
+            display: none;
+            padding: 20px;
+        }
+        
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .success-title {
+            font-size: 20px;
+            color: #07c160;
+            margin-bottom: 8px;
+        }
+        
+        .success-desc {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .loading {
+            display: none;
+            padding: 20px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #07c160;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div id="auth-form">
+            <div class="platform-logo" id="platformLogo"></div>
+            <h1 id="platformName">平台授权</h1>
+            <p id="platformDesc">请确认授权量屿访问您的账号数据</p>
+            
+            <div class="auth-info">
+                <h3>将获取以下权限：</h3>
+                <ul>
+                    <li>查看账号基本信息（昵称、头像）</li>
+                    <li>查看作品数据（播放量、点赞数）</li>
+                    <li>查看粉丝数据（粉丝数量、增长趋势）</li>
+                </ul>
+            </div>
+            
+            <button class="btn btn-primary" onclick="authorize()">同意授权</button>
+            <button class="btn btn-secondary" onclick="cancel()">取消授权</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">正在授权中...</div>
+        </div>
+        
+        <div class="success-message" id="success">
+            <div class="success-icon">✓</div>
+            <div class="success-title">授权成功</div>
+            <div class="success-desc">已成功绑定账号，即将返回...</div>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const platform = params.get('platform');
+        const scene = params.get('scene');
+        const userId = params.get('userId');
+        
+        const platformConfig = {
+            douyin: {
+                name: '抖音',
+                desc: '请确认授权量屿访问您的抖音账号数据',
+                icon: '🎵'
+            },
+            xiaohongshu: {
+                name: '小红书',
+                desc: '请确认授权量屿访问您的小红书账号数据',
+                icon: '📕'
+            },
+            bilibili: {
+                name: 'B站',
+                desc: '请确认授权量屿访问您的B站账号数据',
+                icon: '📺'
+            }
+        };
+        
+        if (platform && platformConfig[platform]) {
+            const config = platformConfig[platform];
+            document.getElementById('platformLogo').className = 'platform-logo ' + platform;
+            document.getElementById('platformLogo').textContent = config.icon;
+            document.getElementById('platformName').textContent = config.name + '授权';
+            document.getElementById('platformDesc').textContent = config.desc;
+        }
+        
+        async function authorize() {
+            document.getElementById('auth-form').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const response = await fetch(`http://localhost:3000/api/auth/platform/bind/mock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scene: scene })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('success').style.display = 'block';
+                    
+                    setTimeout(() => {
+                        window.close();
+                    }, 2000);
+                } else {
+                    alert('授权失败：' + result.error);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('auth-form').style.display = 'block';
+                }
+            } catch (error) {
+                alert('授权失败，请检查网络连接');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('auth-form').style.display = 'block';
+            }
+        }
+        
+        function cancel() {
+            window.close();
+        }
+    </script>
+</body>
+</html>

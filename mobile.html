@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>量屿 - 移动端</title>
+    <link rel="stylesheet" href="mobile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8CB4D2">
+</head>
+<body>
+    <div id="mobile-app">
+        <header class="mobile-header">
+            <div class="header-content">
+                <div class="logo">
+                    <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+                        <path d="M6 28C6 28 12 24 18 24C24 24 30 28 30 28" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M6 28L6 34L30 34L30 28" fill="#3b82f6" opacity="0.3"/>
+                        <path d="M10 22L14 18L18 20L22 16L26 22" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>量屿</span>
+                </div>
+                <button class="login-btn" onclick="toggleMobileLogin()">登录</button>
+            </div>
+        </header>
+
+        <main class="mobile-content">
+            <div id="mobile-login" class="mobile-section">
+                <div class="login-form">
+                    <h2>登录账号</h2>
+                    <input type="text" id="mobileUsername" placeholder="用户名">
+                    <input type="password" id="mobilePassword" placeholder="密码">
+                    <button class="submit-btn" onclick="mobileLogin()">登录</button>
+                    <button class="register-btn" onclick="mobileRegister()">注册</button>
+                </div>
+            </div>
+
+            <div id="mobile-home" class="mobile-section" style="display: none;">
+                <div class="today-card">
+                    <div class="card-header">
+                        <h2>今日数据</h2>
+                        <span class="date">7月8日</span>
+                    </div>
+                    <div class="today-stats">
+                        <div class="today-stat">
+                            <span class="stat-value" id="mTotalViews">--</span>
+                            <span class="stat-label">总播放</span>
+                        </div>
+                        <div class="today-stat">
+                            <span class="stat-value" id="mTotalLikes">--</span>
+                            <span class="stat-label">总点赞</span>
+                        </div>
+                        <div class="today-stat">
+                            <span class="stat-value" id="mNetFollowers">--</span>
+                            <span class="stat-label">净增粉丝</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="platforms-section">
+                    <h2>平台概览</h2>
+                    <div class="platform-list">
+                        <div class="platform-item" onclick="showPlatformDetail('douyin')">
+                            <div class="platform-icon douyin">
+                                <img src="../Kevin/images/抖音.png" alt="抖音">
+                            </div>
+                            <div class="platform-info">
+                                <div class="platform-name">抖音</div>
+                                <div class="platform-stats">
+                                    <span>粉丝 <span id="mDouyinFans">--</span></span>
+                                    <span>点赞 <span id="mDouyinLikes">--</span></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        <div class="platform-item" onclick="showPlatformDetail('xiaohongshu')">
+                            <div class="platform-icon xiaohongshu">
+                                <img src="../Kevin/images/小红书.png" alt="小红书">
+                            </div>
+                            <div class="platform-info">
+                                <div class="platform-name">小红书</div>
+                                <div class="platform-stats">
+                                    <span>粉丝 <span id="mXiaohongshuFans">--</span></span>
+                                    <span>点赞 <span id="mXiaohongshuLikes">--</span></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        <div class="platform-item" onclick="showPlatformDetail('bilibili')">
+                            <div class="platform-icon bilibili">
+                                <img src="../Kevin/images/B站%20logo.svg" alt="B站">
+                            </div>
+                            <div class="platform-info">
+                                <div class="platform-name">B站</div>
+                                <div class="platform-stats">
+                                    <span>粉丝 <span id="mBilibiliFans">--</span></span>
+                                    <span>点赞 <span id="mBilibiliLikes">--</span></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="latest-works">
+                    <h2>最新作品</h2>
+                    <div id="mobileWorksList" class="works-list"></div>
+                </div>
+            </div>
+
+            <div id="mobile-platform-detail" class="mobile-section" style="display: none;">
+                <div class="detail-header">
+                    <button class="back-btn" onclick="backToHome()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 id="detailTitle">平台详情</h2>
+                </div>
+                <div class="detail-stats">
+                    <div class="detail-stat">
+                        <i class="fas fa-users"></i>
+                        <div>
+                            <span class="stat-value" id="dFans">--</span>
+                            <span class="stat-label">粉丝数</span>
+                        </div>
+                    </div>
+                    <div class="detail-stat">
+                        <i class="fas fa-heart"></i>
+                        <div>
+                            <span class="stat-value" id="dLikes">--</span>
+                            <span class="stat-label">总点赞</span>
+                        </div>
+                    </div>
+                    <div class="detail-stat">
+                        <i class="fas fa-video"></i>
+                        <div>
+                            <span class="stat-value" id="dWorks">--</span>
+                            <span class="stat-label">作品数</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-works">
+                    <h3>作品列表</h3>
+                    <div id="detailWorksList" class="detail-works-list"></div>
+                </div>
+            </div>
+        </main>
+
+        <nav class="mobile-nav">
+            <button class="nav-item active" onclick="showSection('mobile-home')">
+                <i class="fas fa-home"></i>
+                <span>首页</span>
+            </button>
+            <button class="nav-item" onclick="refreshMobileData()">
+                <i class="fas fa-sync-alt"></i>
+                <span>刷新</span>
+            </button>
+            <button class="nav-item" onclick="toggleMobileLogin()">
+                <i class="fas fa-user"></i>
+                <span>我的</span>
+            </button>
+        </nav>
+    </div>
+
+    <script src="mobile.js"></script>
+</body>
+</html>

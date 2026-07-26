@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>量屿 - 自媒体数据看板</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8CB4D2">
+</head>
+<body>
+    <div id="app">
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header" onclick="router.navigate('home')">
+                <img class="user-avatar" src="images/社媒账号头像.jpg" alt="头像">
+                <div class="user-info">
+                    <span class="user-name">Kevin科奇</span>
+                    <span class="user-title">自媒体数据看板</span>
+                </div>
+            </div>
+            <div class="sidebar-nav">
+                <a href="#home" class="sidebar-item active" data-page="home">
+                    <i class="fas fa-home"></i>
+                    <span>总览</span>
+                </a>
+                <a href="#import" class="sidebar-item" data-page="import">
+                    <i class="fas fa-upload"></i>
+                    <span>数据导入</span>
+                </a>
+                <a href="#accounts" class="sidebar-item" data-page="accounts">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>账号</span>
+                </a>
+                <a href="#works" class="sidebar-item" data-page="works">
+                    <i class="fas fa-video"></i>
+                    <span>作品</span>
+                </a>
+                <a href="#settings" class="sidebar-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>设置</span>
+                </a>
+            </div>
+        </aside>
+
+        <main id="main-content">
+            <div id="page-home" class="page-view">
+                <div class="dashboard-container">
+                    <div class="kpi-section">
+                        <div class="kpi-card">
+                            <div class="kpi-icon blue"><i class="fas fa-play"></i></div>
+                            <div class="kpi-info">
+                                <div class="kpi-value" id="totalViews">--</div>
+                                <div class="kpi-label">总播放量</div>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon orange"><i class="fas fa-heart"></i></div>
+                            <div class="kpi-info">
+                                <div class="kpi-value" id="totalLikes">--</div>
+                                <div class="kpi-label">总点赞量</div>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon purple"><i class="fas fa-comment"></i></div>
+                            <div class="kpi-info">
+                                <div class="kpi-value" id="totalComments">--</div>
+                                <div class="kpi-label">总评论量</div>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon green"><i class="fas fa-share-alt"></i></div>
+                            <div class="kpi-info">
+                                <div class="kpi-value" id="totalShares">--</div>
+                                <div class="kpi-label">总转发量</div>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon pink"><i class="fas fa-users"></i></div>
+                            <div class="kpi-info">
+                                <div class="kpi-value" id="netFollowers">--</div>
+                                <div class="kpi-label">净增粉丝</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>近7天流量趋势</h3>
+                                <div class="chart-tabs">
+                                    <button class="chart-tab active" onclick="switchTrendPeriod('7d')">7天</button>
+                                    <button class="chart-tab" onclick="switchTrendPeriod('30d')">30天</button>
+                                </div>
+                            </div>
+                            <div id="trendChart" class="chart-container"></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>数据分布</h3>
+                                <div class="chart-tabs">
+                                    <button class="chart-tab active" onclick="switchPieChart('views')">播放量</button>
+                                    <button class="chart-tab" onclick="switchPieChart('likes')">点赞量</button>
+                                </div>
+                            </div>
+                            <div id="pieChart" class="chart-container"></div>
+                        </div>
+                    </div>
+
+                    <div class="islands-section">
+                        <h2>平台小岛</h2>
+                        <div class="islands-grid">
+                            <div class="island-card douyin">
+                                <div class="island-header">
+                                    <img src="images/抖音Logo.png" alt="抖音">
+                                    <span>抖音</span>
+                                </div>
+                                <div class="island-stats">
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="douyin-fans">--</span>
+                                        <span class="stat-label">粉丝</span>
+                                    </div>
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="douyin-likes">--</span>
+                                        <span class="stat-label">点赞</span>
+                                    </div>
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="douyin-works">--</span>
+                                        <span class="stat-label">作品</span>
+                                    </div>
+                                </div>
+                                <button class="island-action" onclick="router.navigate('accounts?platform=douyin')">查看详情</button>
+                            </div>
+                            <div class="island-card xiaohongshu">
+                                <div class="island-header">
+                                    <img src="images/小红书Logo.png" alt="小红书">
+                                    <span>小红书</span>
+                                </div>
+                                <div class="island-stats">
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="xiaohongshu-fans">--</span>
+                                        <span class="stat-label">粉丝</span>
+                                    </div>
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="xiaohongshu-likes">--</span>
+                                        <span class="stat-label">点赞</span>
+                                    </div>
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="xiaohongshu-works">--</span>
+                                        <span class="stat-label">作品</span>
+                                    </div>
+                                </div>
+                                <button class="island-action" onclick="router.navigate('accounts?platform=xiaohongshu')">查看详情</button>
+                            </div>
+                            <div class="island-card bilibili">
+                                <div class="island-header">
+                                    <img src="images/B站 Logo.svg" alt="B站">
+                                    <span>B站</span>
+                                </div>
+                                <div class="island-stats">
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="bilibili-fans">--</span>
+                                        <span class="stat-label">粉丝</span>
+                                    </div>
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="bilibili-likes">--</span>
+                                        <span class="stat-label">点赞</span>
+                                    </div>
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="bilibili-works">--</span>
+                                        <span class="stat-label">作品</span>
+                                    </div>
+                                </div>
+                                <button class="island-action" onclick="router.navigate('accounts?platform=bilibili')">查看详情</button>
+                            </div>
+                            <div class="island-card kuaishou">
+                                <div class="island-header">
+                                    <img src="images/快手Logo.svg" alt="快手">
+                                    <span>快手</span>
+                                </div>
+                                <div class="island-stats">
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="kuaishou-fans">--</span>
+                                        <span class="stat-label">粉丝</span>
+                                    </div>
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="kuaishou-likes">--</span>
+                                        <span class="stat-label">点赞</span>
+                                    </div>
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="kuaishou-works">--</span>
+                                        <span class="stat-label">作品</span>
+                                    </div>
+                                </div>
+                                <button class="island-action" onclick="router.navigate('accounts?platform=kuaishou')">查看详情</button>
+                            </div>
+                            <div class="island-card wechat">
+                                <div class="island-header">
+                                    <img src="images/微信视频号Logo.svg" alt="微信视频号">
+                                    <span>微信视频号</span>
+                                </div>
+                                <div class="island-stats">
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="wechat-fans">--</span>
+                                        <span class="stat-label">粉丝</span>
+                                    </div>
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="wechat-likes">--</span>
+                                        <span class="stat-label">点赞</span>
+                                    </div>
+                                    <div class="island-stat">
+                                        <span class="stat-value" id="wechat-works">--</span>
+                                        <span class="stat-label">作品</span>
+                                    </div>
+                                </div>
+                                <button class="island-action" onclick="router.navigate('accounts?platform=wechat')">查看详情</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quick-works">
+                        <div class="section-header">
+                            <h2>热门作品</h2>
+                            <button onclick="router.navigate('works')">查看全部</button>
+                        </div>
+                        <div id="quickWorksList" class="works-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-accounts" class="page-view" style="display: none;">
+                <div class="accounts-container">
+                    <div class="accounts-sidebar">
+                        <div class="sidebar-title">选择平台</div>
+                        <div class="platform-nav">
+                            <button class="platform-nav-item active" data-platform="all" onclick="switchAccountPlatform('all')">全部平台</button>
+                            <button class="platform-nav-item" data-platform="douyin" onclick="switchAccountPlatform('douyin')">抖音</button>
+                            <button class="platform-nav-item" data-platform="xiaohongshu" onclick="switchAccountPlatform('xiaohongshu')">小红书</button>
+                            <button class="platform-nav-item" data-platform="bilibili" onclick="switchAccountPlatform('bilibili')">B站</button>
+                            <button class="platform-nav-item" data-platform="kuaishou" onclick="switchAccountPlatform('kuaishou')">快手</button>
+                            <button class="platform-nav-item" data-platform="wechat" onclick="switchAccountPlatform('wechat')">微信视频号</button>
+                        </div>
+                        <div class="sidebar-title" style="margin-top: 1.5rem;">多选对比</div>
+                        <div class="platform-multi-select">
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="douyin" onchange="updateMultiSelect()">
+                                <span>抖音</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="xiaohongshu" onchange="updateMultiSelect()">
+                                <span>小红书</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="bilibili" onchange="updateMultiSelect()">
+                                <span>B站</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="kuaishou" onchange="updateMultiSelect()">
+                                <span>快手</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="wechat" onchange="updateMultiSelect()">
+                                <span>微信视频号</span>
+                            </label>
+                            <button class="multi-select-btn" onclick="applyMultiSelect()">应用筛选</button>
+                        </div>
+                    </div>
+                    <div class="accounts-content">
+                        <div class="content-header">
+                            <h2 id="accountPageTitle">全部作品</h2>
+                            <div class="content-actions">
+                                <select id="sortBy" onchange="sortWorks()">
+                                    <option value="likes">按点赞量排序</option>
+                                    <option value="views">按播放量排序</option>
+                                    <option value="comments">按评论量排序</option>
+                                </select>
+                                <button onclick="exportWorks()">导出Excel</button>
+                            </div>
+                        </div>
+                        <div id="accountWorksTable" class="works-table-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-import" class="page-view" style="display: none;">
+                <div class="import-container">
+                    <div class="import-header">
+                        <h1>数据导入</h1>
+                        <p>上传Excel/CSV文件或手动添加单条作品数据</p>
+                    </div>
+
+                    <div class="import-tabs">
+                        <button class="import-tab-btn active" onclick="switchImportMode('upload')">文件上传</button>
+                        <button class="import-tab-btn" onclick="switchImportMode('manual')">手动添加</button>
+                    </div>
+
+                    <div id="import-upload-panel" class="import-panel">
+                        <div class="upload-card">
+                            <div class="upload-icon">
+                                <i class="fas fa-upload"></i>
+                            </div>
+                            <h3>上传数据文件</h3>
+                            <p>支持Excel (.xlsx/.xls) 和 CSV 文件</p>
+                            
+                            <div class="upload-form">
+                                <div class="form-row">
+                                    <label>选择平台</label>
+                                    <select id="importPlatformSelect">
+                                        <option value="douyin">抖音</option>
+                                        <option value="xiaohongshu">小红书</option>
+                                        <option value="bilibili">B站</option>
+                                        <option value="kuaishou">快手</option>
+                                        <option value="wechat">微信视频号</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <label>选择文件</label>
+                                    <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv">
+                                </div>
+                                
+                                <button class="upload-btn" onclick="handleFileUpload()">开始导入</button>
+                            </div>
+                            
+                            <div class="upload-tips">
+                                <h4>文件格式说明</h4>
+                                <ul>
+                                    <li>表格需包含以下字段：标题、发布时间、播放/观看量、点赞、收藏、评论、转发/分享</li>
+                                    <li>系统会自动匹配表头，支持中英文表头</li>
+                                    <li>重复数据（相同标题+发布时间）将自动覆盖更新</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="import-manual-panel" class="import-panel" style="display: none;">
+                        <div class="manual-card">
+                            <h3>手动添加作品</h3>
+                            <p>填写作品信息，临时补充数据</p>
+                            
+                            <div class="manual-form">
+                                <div class="form-row">
+                                    <label>平台</label>
+                                    <select id="manualPlatform">
+                                        <option value="douyin">抖音</option>
+                                        <option value="xiaohongshu">小红书</option>
+                                        <option value="bilibili">B站</option>
+                                        <option value="kuaishou">快手</option>
+                                        <option value="wechat">微信视频号</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <label>作品标题</label>
+                                    <input type="text" id="manualTitle" placeholder="请输入作品标题">
+                                </div>
+                                
+                                <div class="form-row">
+                                    <label>发布时间</label>
+                                    <input type="datetime-local" id="manualPublishTime">
+                                </div>
+                                
+                                <div class="form-row">
+                                    <label>播放/观看量</label>
+                                    <input type="text" id="manualViews" placeholder="如：10000 或 1.2w">
+                                </div>
+                                
+                                <div class="form-row">
+                                    <label>点赞量</label>
+                                    <input type="number" id="manualLikes" placeholder="0">
+                                </div>
+                                
+                                <div class="form-row">
+                                    <label>收藏量</label>
+                                    <input type="number" id="manualFavorites" placeholder="0">
+                                </div>
+                                
+                                <div class="form-row">
+                                    <label>评论量</label>
+                                    <input type="text" id="manualComments" placeholder="如：100">
+                                </div>
+                                
+                                <div class="form-row">
+                                    <label>转发/分享量</label>
+                                    <input type="number" id="manualShares" placeholder="0">
+                                </div>
+                                
+                                <button class="submit-btn" onclick="submitManualWork()">提交</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-works" class="page-view" style="display: none;">
+                <div class="works-container">
+                    <div class="works-header">
+                        <h1>热门作品</h1>
+                        <div class="works-search">
+                            <input type="text" id="workSearch" placeholder="搜索作品..." oninput="searchWorks()">
+                            <select id="workFilter" onchange="filterWorks()">
+                                <option value="all">全部平台</option>
+                                <option value="douyin">抖音</option>
+                                <option value="xiaohongshu">小红书</option>
+                                <option value="bilibili">B站</option>
+                                <option value="kuaishou">快手</option>
+                                <option value="wechat">微信视频号</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="worksGrid" class="works-grid"></div>
+                </div>
+            </div>
+
+            <div id="page-settings" class="page-view" style="display: none;">
+                <div class="settings-container">
+                    <h1>数据同步设置</h1>
+                    <div class="settings-section">
+                        <h2>手动刷新</h2>
+                        <div class="refresh-buttons">
+                            <button class="refresh-btn" onclick="refreshAllData()">刷新全部数据</button>
+                            <button class="refresh-btn" onclick="refreshPlatformData('douyin')">刷新抖音数据</button>
+                            <button class="refresh-btn" onclick="refreshPlatformData('xiaohongshu')">刷新小红书数据</button>
+                            <button class="refresh-btn" onclick="refreshPlatformData('bilibili')">刷新B站数据</button>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h2>定时同步</h2>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="autoSync">
+                            <span>开启定时同步</span>
+                        </label>
+                        <select id="syncInterval">
+                            <option value="60">每小时</option>
+                            <option value="1440">每天</option>
+                            <option value="10080">每周</option>
+                        </select>
+                    </div>
+                    <div class="settings-section">
+                        <h2>账号管理</h2>
+                        <div id="accountList" class="account-list"></div>
+                    </div>
+                    <div class="settings-section">
+                        <h2>数据导入</h2>
+                        <div class="import-section">
+                            <input type="file" id="importFile" accept=".csv,.json">
+                            <select id="importPlatform">
+                                <option value="douyin">抖音</option>
+                                <option value="xiaohongshu">小红书</option>
+                                <option value="bilibili">B站</option>
+                            </select>
+                            <button onclick="importData()">导入数据</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div id="importModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="importModalTitle">数据导入</h2>
+                    <button class="close-btn" onclick="closeImportModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-tabs">
+                        <button class="tab-btn active" onclick="switchImportTab('upload')">文件上传</button>
+                        <button class="tab-btn" onclick="switchImportTab('form')">表单录入</button>
+                        <button class="tab-btn" onclick="switchImportTab('guide')">操作指引</button>
+                    </div>
+                    
+                    <div id="tab-upload" class="tab-content">
+                        <div class="import-upload">
+                            <input type="file" id="importFileInput" accept=".csv,.json">
+                            <p>支持CSV和JSON格式文件</p>
+                            <button class="import-btn" onclick="uploadFile()">上传文件</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-form" class="tab-content" style="display: none;">
+                        <div class="import-form">
+                            <div class="form-row">
+                                <label>平台</label>
+                                <select id="formPlatform">
+                                    <option value="douyin">抖音</option>
+                                    <option value="xiaohongshu">小红书</option>
+                                    <option value="bilibili">B站</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>账号名称</label>
+                                <input type="text" id="formName" placeholder="如：Kevin科奇">
+                            </div>
+                            <div class="form-row">
+                                <label>粉丝数</label>
+                                <input type="text" id="formFans" placeholder="如：1250">
+                            </div>
+                            <div class="form-row">
+                                <label>点赞数</label>
+                                <input type="text" id="formLikes" placeholder="如：2360">
+                            </div>
+                            <div class="form-row">
+                                <label>作品数</label>
+                                <input type="text" id="formWorks" placeholder="如：12">
+                            </div>
+                            <div class="form-row">
+                                <label>作品数据（每行一条，格式：标题|播放量|点赞量|评论量）</label>
+                                <textarea id="formWorksData" rows="5" placeholder="示例：&#10;作品标题1|10000|500|30&#10;作品标题2|5000|200|10"></textarea>
+                            </div>
+                            <button class="import-btn" onclick="submitFormData()">提交数据</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-guide" class="tab-content" style="display: none;">
+                        <div class="import-guide">
+                            <div class="guide-step">
+                                <h3>📱 第一步：登录创作者后台</h3>
+                                <ul>
+                                    <li>抖音：<a href="https://creator.douyin.com" target="_blank">creator.douyin.com</a></li>
+                                    <li>小红书：<a href="https://creator.xiaohongshu.com" target="_blank">creator.xiaohongshu.com</a></li>
+                                </ul>
+                            </div>
+                            <div class="guide-step">
+                                <h3>📊 第二步：查看数据</h3>
+                                <p>在创作者后台查看账号总览数据和作品列表</p>
+                            </div>
+                            <div class="guide-step">
+                                <h3>📝 第三步：手动录入</h3>
+                                <p>切换到「表单录入」标签页，填写账号信息和作品数据</p>
+                            </div>
+                            <div class="guide-step">
+                                <h3>💾 第四步：保存数据</h3>
+                                <p>点击「提交数据」按钮，数据将保存到本地数据库</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bindModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="bindModalTitle">绑定平台</h2>
+                    <button class="close-btn" onclick="closeBindModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="bind-tabs">
+                        <button class="tab-btn active" onclick="switchBindTab('scan')">扫码绑定</button>
+                        <button class="tab-btn" onclick="switchBindTab('manual')">手动导入</button>
+                    </div>
+                    
+                    <div id="bind-tab-scan" class="bind-tab-content">
+                        <div class="scan-qrcode-container">
+                            <div class="qrcode-box">
+                                <img id="bindQrcode" src="" alt="扫码绑定">
+                                <p id="scanStatus">请使用手机扫码绑定</p>
+                                <p class="scan-hint">或点击 <a href="#" id="authLink" target="_blank">此处</a> 打开授权页面</p>
+                            </div>
+                            <button class="scan-refresh-btn" onclick="refreshBindQrcode()">刷新二维码</button>
+                            <button class="scan-mock-btn" onclick="mockScanBind()">模拟扫码绑定</button>
+                        </div>
+                    </div>
+                    
+                    <div id="bind-tab-manual" class="bind-tab-content" style="display: none;">
+                        <button class="import-btn" onclick="openImportModal(currentBindPlatform)">手动导入数据</button>
+                        <p class="bind-note">暂不支持个人创作者API，请手动导入数据</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="router.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
