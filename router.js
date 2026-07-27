@@ -81,5 +81,7 @@ const router = {
 
 document.addEventListener('DOMContentLoaded', () => {
     router.init();
-    router.navigate('home');
+    setTimeout(() => {
+        router.navigate('home');
+    }, 100);
 });

@@ -650,7 +650,19 @@ function loadAccountData() {
         updateDashboard();
         updateAccountStats();
         renderQuickWorks();
-        initCharts();
+        setTimeout(function() {
+            initCharts();
+        }, 200);
+    })
+    .catch(function(error) {
+        console.error('Failed to load account data:', error);
+        // 即使失败也尝试渲染模拟数据
+        updateDashboard();
+        updateAccountStats();
+        renderQuickWorks();
+        setTimeout(function() {
+            initCharts();
+        }, 200);
     });
 }
 
