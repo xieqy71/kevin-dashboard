@@ -792,59 +792,73 @@ function initCharts() {
     
     if (pieEl) {
         pieChart = echarts.init(pieEl);
+        var platforms = realData.pieData.views.map(function(item) { return item.name; });
+        var colorMap = {
+            '抖音': '#5B8AB8',
+            '小红书': '#C4849E',
+            'B站': '#9B7BB8',
+            '快手': '#D4A56A',
+            '微信视频号': '#5BA87C'
+        };
+        var barColors = realData.pieData.views.map(function(item) { return colorMap[item.name] || '#5B8AB8'; });
+        
         pieChart.setOption({
             tooltip: { 
-                trigger: 'item', 
+                trigger: 'axis', 
+                axisPointer: { type: 'shadow' },
                 backgroundColor: 'rgba(255, 255, 255, 0.98)', 
                 borderColor: '#E8F0EE', 
                 borderWidth: 1,
                 textStyle: { color: '#3D5A4F' },
                 boxShadow: '0 2px 6px rgba(45, 90, 78, 0.06)',
-                formatter: '{b}: {c} ({d}%)' 
+                formatter: function(params) {
+                    return params[0].name + ': ' + params[0].value.toLocaleString();
+                }
             },
-            legend: { 
-                orient: 'vertical', 
-                right: '5%', 
-                top: 'center', 
-                textStyle: { color: '#6B8A7D', fontSize: 11 },
-                itemWidth: 10,
-                itemHeight: 1.5
+            grid: {
+                left: '10%',
+                right: '5%',
+                top: '15%',
+                bottom: '10%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: platforms,
+                axisLine: { lineStyle: { color: '#E8F0EE' } },
+                axisTick: { show: false },
+                axisLabel: { 
+                    color: '#6B8A7D', 
+                    fontSize: 11,
+                    interval: 0,
+                    rotate: 0
+                }
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { color: '#6B8A7D', fontSize: 11 },
+                splitLine: { lineStyle: { color: '#F0F5F3', type: 'dashed' } }
             },
             series: [{ 
                 name: '播放量', 
-                type: 'pie', 
-                radius: ['50%', '70%'], 
-                center: ['35%', '50%'], 
+                type: 'bar', 
+                barWidth: '45%',
                 itemStyle: { 
-                    borderRadius: 2, 
-                    borderColor: '#FFFFFF', 
-                    borderWidth: 1 
-                },
-                label: { show: false },
-                labelLine: { show: false },
-                emphasis: {
-                    scale: true,
-                    scaleSize: 4,
-                    itemStyle: {
-                        shadowBlur: 6,
-                        shadowOffsetX: 0,
-                        shadowColor: 'rgba(45, 90, 78, 0.08)'
+                    borderRadius: [4, 4, 0, 0],
+                    color: function(params) {
+                        return barColors[params.dataIndex];
                     }
                 },
-                data: realData.pieData.views.map(function(item) {
-                    var colorMap = {
-                        '抖音': '#5B8AB8',
-                        '小红书': '#C4849E',
-                        'B站': '#9B7BB8',
-                        '快手': '#D4A56A',
-                        '微信视频号': '#5BA87C'
-                    };
-                    return {
-                        name: item.name,
-                        value: item.value,
-                        itemStyle: { color: colorMap[item.name] || '#5B8AB8' }
-                    };
-                })
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(45, 90, 78, 0.2)'
+                    }
+                },
+                data: realData.pieData.views.map(function(item) { return item.value; })
             }]
         });
     }
@@ -887,17 +901,21 @@ function switchPieChart(type) {
     };
     
     var data = realData.pieData[type] || realData.pieData.views;
-    var formattedData = data.map(function(item) {
-        return {
-            name: item.name,
-            value: item.value,
-            itemStyle: { color: colorMap[item.name] || '#5B8AB8' }
-        };
-    });
+    var platforms = data.map(function(item) { return item.name; });
+    var barColors = data.map(function(item) { return colorMap[item.name] || '#5B8AB8'; });
+    var values = data.map(function(item) { return item.value; });
     
     pieChart.setOption({
+        xAxis: {
+            data: platforms
+        },
         series: [{
-            data: formattedData
+            data: values,
+            itemStyle: {
+                color: function(params) {
+                    return barColors[params.dataIndex];
+                }
+            }
         }]
     }, true);
 }
