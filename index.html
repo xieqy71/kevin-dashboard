@@ -325,9 +325,10 @@
                             <div class="upload-tips">
                                 <h4>文件格式说明</h4>
                                 <ul>
-                                    <li>表格需包含以下字段：标题、发布时间、播放/观看量、点赞、收藏、评论、转发/分享</li>
-                                    <li>系统会自动匹配表头，支持中英文表头</li>
-                                    <li>重复数据（相同标题+发布时间）将自动覆盖更新</li>
+                                    <li>支持 Excel (.xlsx/.xls) 和 CSV 格式</li>
+                                    <li>系统<strong>自动识别</strong>各平台列名，无需手动整理</li>
+                                    <li>常见列名：标题/视频名称、发布时间/日期、播放量/观看量、点赞/喜欢、收藏、评论、转发/分享</li>
+                                    <li>上传前选择对应平台（重要）</li>
                                 </ul>
                             </div>
                         </div>
@@ -572,6 +573,7 @@
         </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="router.js"></script>
     <script src="script.js"></script>
 </body>

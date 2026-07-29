@@ -42,6 +42,62 @@ const mockData = {
     ]
 };
 
+// 智能字段映射配置 - 支持各平台不同的列名
+const FIELD_MAPPING = {
+    title: ['标题', '视频标题', '作品标题', '视频名称', '作品名称', '内容标题', 'title', 'video_title', '视频'],
+    publish_time: ['发布时间', '发布日期', '时间', '上传时间', '创建时间', '日期', 'publish_time', 'create_time', 'date', '发布'],
+    views: ['播放量', '观看量', '播放次数', '观看次数', '曝光量', '浏览量', '累计播放量', '播放总数', 'views', 'play_count', 'view_count'],
+    likes: ['点赞', '点赞数', '点赞量', '喜欢', '喜欢数', 'likes', 'like_count', '获赞'],
+    favorites: ['收藏', '收藏数', '收藏量', 'favorites', 'favorite_count'],
+    comments: ['评论', '评论数', '评论量', 'comments', 'comment_count'],
+    shares: ['转发', '分享', '转发数', '分享数', 'shares', 'share_count', 'forward_count'],
+    rate: ['转化率', '互动率', '播放完成率', 'rate', 'conversion_rate']
+};
+
+// 数字格式化 - 处理中文数字（如"1.2万"、"3.5千"）
+function formatNumberValue(value) {
+    if (!value || value === '-' || value === '--') return 0;
+    if (typeof value === 'number') return Math.round(value);
+    
+    var str = String(value).trim();
+    
+    // 处理带单位的中文数字
+    var chineseUnits = { '万': 10000, '千': 1000, '百': 100, '亿': 100000000 };
+    var match = str.match(/^([\d.]+)\s*(万|千|百|亿)?$/);
+    if (match) {
+        var num = parseFloat(match[1]);
+        var unit = match[2];
+        if (unit && chineseUnits[unit]) {
+            return Math.round(num * chineseUnits[unit]);
+        }
+        return Math.round(num);
+    }
+    
+    // 处理带逗号的数字 (如 "1,234,567")
+    var cleaned = str.replace(/,/g, '');
+    var num = parseFloat(cleaned);
+    if (!isNaN(num)) return Math.round(num);
+    
+    return 0;
+}
+
+// 智能匹配表头字段
+function matchField(header) {
+    var normalizedHeader = String(header).trim().toLowerCase().replace(/\s+/g, '');
+    
+    for (var field in FIELD_MAPPING) {
+        var aliases = FIELD_MAPPING[field];
+        for (var i = 0; i < aliases.length; i++) {
+            var normalizedAlias = aliases[i].toLowerCase().replace(/\s+/g, '');
+            if (normalizedHeader.includes(normalizedAlias) || normalizedAlias.includes(normalizedHeader)) {
+                return field;
+            }
+        }
+    }
+    
+    return null;
+}
+
 let realData = JSON.parse(JSON.stringify(mockData));
 let trendChart, pieChart;
 
@@ -920,6 +976,38 @@ function switchPieChart(type) {
     }, true);
 }
 
+// 更新所有图表
+function updateCharts() {
+    if (!trendChart || !pieChart) return;
+    
+    // 更新趋势图
+    var trendOption = trendChart.getOption();
+    trendOption.series.forEach(function(series, index) {
+        var platform = Object.keys(realData.account)[index];
+        var platformWorks = realData.works.filter(function(w) { return w.platform === platform; });
+        series.data = platformWorks.map(function(w) {
+            return w.views !== '--' ? parseInt(w.views.replace(/,/g, '')) : 0;
+        });
+    });
+    trendChart.setOption(trendOption);
+    
+    // 更新数据分布图
+    var barOption = pieChart.getOption();
+    var platforms = ['抖音', '小红书', 'B站', '快手', '微信视频号'];
+    var platformKeys = ['douyin', 'xiaohongshu', 'bilibili', 'kuaishou', 'wechat'];
+    
+    var values = platformKeys.map(function(key) {
+        var platformWorks = realData.works.filter(function(w) { return w.platform === key; });
+        return platformWorks.reduce(function(sum, w) {
+            return sum + (w.views !== '--' ? parseInt(w.views.replace(/,/g, '')) : 0);
+        }, 0);
+    });
+    
+    barOption.xAxis[0].data = platforms;
+    barOption.series[0].data = values;
+    pieChart.setOption(barOption);
+}
+
 function switchAccountPlatform(platform) {
     var navItems = document.querySelectorAll('.platform-nav-item');
     for (var i = 0; i < navItems.length; i++) {
@@ -1213,64 +1301,277 @@ function handleFileUpload() {
     }
     
     var ext = file.name.split('.').pop().toLowerCase();
-    if (ext === 'csv') {
+    
+    if (ext === 'xlsx' || ext === 'xls') {
+        // Excel 文件处理
         var reader = new FileReader();
         reader.onload = function(e) {
-            var content = e.target.result;
-            var lines = content.split('\n').filter(line => line.trim());
-            if (lines.length < 2) {
-                alert('文件内容为空');
-                return;
+            try {
+                var data = new Uint8Array(e.target.result);
+                var workbook = XLSX.read(data, { type: 'array' });
+                var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                var jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                if (jsonData.length < 2) {
+                    alert('文件内容为空');
+                    return;
+                }
+                
+                processImportedData(jsonData, platform);
+            } catch (error) {
+                alert('Excel文件解析失败: ' + error.message);
             }
-            
-            var headers = lines[0].split(',').map(h => h.trim());
-            var newCount = 0;
-            var updatedCount = 0;
-            
-            for (var i = 1; i < lines.length; i++) {
-                var values = lines[i].split(',');
-                var row = {};
-                headers.forEach((h, idx) => {
-                    row[h] = values[idx] ? values[idx].trim() : '';
+        };
+        reader.readAsArrayBuffer(file);
+    } else if (ext === 'csv') {
+        // CSV 文件处理
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var content = e.target.result;
+                // 处理可能带引号的CSV
+                var lines = content.split('\n').filter(function(line) { return line.trim(); });
+                
+                if (lines.length < 2) {
+                    alert('文件内容为空');
+                    return;
+                }
+                
+                var jsonData = lines.map(function(line) {
+                    return line.split(',').map(function(item) { return item.trim().replace(/^"|"$/g, ''); });
                 });
                 
-                var title = row['标题'] || row['title'] || row['作品名称'];
-                if (!title) continue;
-                
-                var existing = realData.works.find(w => w.title === title && w.platform === platform);
-                var work = {
-                    id: existing ? existing.id : Date.now(),
-                    rank: 0,
-                    platform: platform,
-                    title: title,
-                    publish_time: row['发布时间'] || row['publish_time'] || row['时间'] || '',
-                    views: row['播放量'] || row['播放'] || row['views'] || '--',
-                    likes: parseInt(row['点赞'] || row['likes'] || '0'),
-                    favorites: parseInt(row['收藏'] || row['favorites'] || '0'),
-                    comments: row['评论'] || row['comments'] || '--',
-                    shares: parseInt(row['转发'] || row['分享'] || row['shares'] || '0'),
-                    rate: row['转化率'] || row['rate'] || '--'
-                };
-                
-                if (existing) {
-                    var idx = realData.works.indexOf(existing);
-                    realData.works[idx] = work;
-                    updatedCount++;
-                } else {
-                    realData.works.push(work);
-                    newCount++;
-                }
+                processImportedData(jsonData, platform);
+            } catch (error) {
+                alert('CSV文件解析失败: ' + error.message);
             }
-            
-            saveToLocalStorage();
-            showImportResult(newCount, updatedCount);
-            fileInput.value = '';
-            loadAccountData();
         };
         reader.readAsText(file);
     } else {
-        alert('纯静态模式仅支持CSV文件，请上传CSV格式');
+        alert('请上传 Excel (.xlsx/.xls) 或 CSV 文件');
     }
+}
+
+// 处理导入的数据
+function processImportedData(jsonData, platform) {
+    // 找到第一行作为表头（可能前面有合并单元格或标题行）
+    var headerRowIndex = 0;
+    var headers = jsonData[0].map(function(h) { return h ? String(h).trim() : ''; });
+    
+    // 尝试找到包含有效表头的行
+    for (var i = 0; i < Math.min(jsonData.length, 5); i++) {
+        var row = jsonData[i];
+        var matchedCount = 0;
+        for (var j = 0; j < row.length; j++) {
+            if (row[j]) {
+                var field = matchField(row[j]);
+                if (field) matchedCount++;
+            }
+        }
+        if (matchedCount >= 2) {
+            headerRowIndex = i;
+            headers = row.map(function(h) { return h ? String(h).trim() : ''; });
+            break;
+        }
+    }
+    
+    // 创建列映射
+    var columnMapping = {};
+    for (var colIdx = 0; colIdx < headers.length; colIdx++) {
+        var header = headers[colIdx];
+        if (header) {
+            var field = matchField(header);
+            if (field) {
+                columnMapping[field] = colIdx;
+            }
+        }
+    }
+    
+    // 检查是否至少匹配到标题字段
+    if (!columnMapping.title) {
+        alert('无法识别文件中的标题列，请确保文件包含"标题"或类似字段');
+        return;
+    }
+    
+    // 处理数据行
+    var newCount = 0;
+    var updatedCount = 0;
+    var dataStartRow = headerRowIndex + 1;
+    
+    for (var i = dataStartRow; i < jsonData.length; i++) {
+        var row = jsonData[i];
+        if (!row || row.length === 0) continue;
+        
+        // 获取标题
+        var titleIdx = columnMapping.title;
+        var title = row[titleIdx] ? String(row[titleIdx]).trim() : '';
+        if (!title) continue;
+        
+        // 检查是否跳过行（如合计行）
+        if (title.includes('合计') || title.includes('总计') || title.includes('平均')) continue;
+        
+        // 获取发布时间
+        var publishTime = '';
+        if (columnMapping.publish_time !== undefined) {
+            var timeVal = row[columnMapping.publish_time];
+            if (timeVal) {
+                // 处理Excel日期格式
+                if (typeof timeVal === 'number') {
+                    var excelDate = new Date((timeVal - 25569) * 86400 * 1000);
+                    publishTime = excelDate.toISOString().split('T')[0];
+                } else {
+                    publishTime = String(timeVal).trim();
+                }
+            }
+        }
+        
+        // 数值字段
+        var views = '--';
+        if (columnMapping.views !== undefined) {
+            var viewsVal = row[columnMapping.views];
+            if (viewsVal !== undefined && viewsVal !== null && viewsVal !== '') {
+                views = formatNumberValue(viewsVal);
+                views = views.toLocaleString();
+            }
+        }
+        
+        var likes = 0;
+        if (columnMapping.likes !== undefined) {
+            likes = formatNumberValue(row[columnMapping.likes]);
+        }
+        
+        var favorites = 0;
+        if (columnMapping.favorites !== undefined) {
+            favorites = formatNumberValue(row[columnMapping.favorites]);
+        }
+        
+        var comments = '--';
+        if (columnMapping.comments !== undefined) {
+            var commentsVal = formatNumberValue(row[columnMapping.comments]);
+            if (commentsVal > 0) {
+                comments = commentsVal.toLocaleString();
+            }
+        }
+        
+        var shares = 0;
+        if (columnMapping.shares !== undefined) {
+            shares = formatNumberValue(row[columnMapping.shares]);
+        }
+        
+        var rate = '--';
+        if (columnMapping.rate !== undefined) {
+            var rateVal = row[columnMapping.rate];
+            if (rateVal) {
+                rate = String(rateVal).trim();
+                if (!rate.includes('%')) {
+                    rate = rate + '%';
+                }
+            }
+        }
+        
+        // 检查是否已存在
+        var existing = realData.works.find(function(w) { 
+            return w.title === title && w.platform === platform; 
+        });
+        
+        var work = {
+            id: existing ? existing.id : Date.now() + i,
+            rank: 0,
+            platform: platform,
+            title: title,
+            publish_time: publishTime,
+            views: views,
+            likes: likes,
+            favorites: favorites,
+            comments: comments,
+            shares: shares,
+            rate: rate
+        };
+        
+        if (existing) {
+            var idx = realData.works.indexOf(existing);
+            realData.works[idx] = work;
+            updatedCount++;
+        } else {
+            realData.works.push(work);
+            newCount++;
+        }
+    }
+    
+    if (newCount === 0 && updatedCount === 0) {
+        alert('没有导入任何数据，请检查文件格式');
+        return;
+    }
+    
+    // 更新统计数据
+    updateAccountStats(platform);
+    
+    saveToLocalStorage();
+    showImportResult(newCount, updatedCount);
+    
+    // 清空文件输入
+    fileInput.value = '';
+    
+    // 重新加载页面数据
+    loadAccountData();
+    updateCharts();
+    
+    // 显示字段映射信息
+    showFieldMappingInfo(headers, columnMapping);
+}
+
+// 更新账号统计
+function updateAccountStats(platform) {
+    var stats = realData.account[platform];
+    if (stats) {
+        // 更新作品数
+        stats.works = realData.works.filter(function(w) { return w.platform === platform; }).length;
+        
+        // 更新总播放量
+        var totalViews = 0;
+        realData.works.filter(function(w) { return w.platform === platform; }).forEach(function(w) {
+            if (w.views !== '--') {
+                totalViews += parseInt(w.views.replace(/,/g, '')) || 0;
+            }
+        });
+        stats.todayViews = totalViews;
+    }
+    
+    // 更新KPI
+    var allViews = 0, allLikes = 0, allComments = 0, allShares = 0;
+    realData.works.forEach(function(w) {
+        if (w.views !== '--') allViews += parseInt(w.views.replace(/,/g, '')) || 0;
+        allLikes += w.likes || 0;
+        if (w.comments !== '--') allComments += parseInt(w.comments.replace(/,/g, '')) || 0;
+        allShares += w.shares || 0;
+    });
+    
+    realData.kpi.totalViews = formatNumber(allViews);
+    realData.kpi.totalLikes = allLikes.toLocaleString();
+    realData.kpi.totalComments = formatNumber(allComments);
+    realData.kpi.totalShares = formatNumber(allShares);
+}
+
+// 显示字段映射信息
+function showFieldMappingInfo(headers, mapping) {
+    var fieldNames = {
+        title: '标题',
+        publish_time: '发布时间',
+        views: '播放量',
+        likes: '点赞',
+        favorites: '收藏',
+        comments: '评论',
+        shares: '分享',
+        rate: '转化率'
+    };
+    
+    var info = '字段映射结果：\n\n';
+    for (var field in mapping) {
+        var header = headers[mapping[field]];
+        info += fieldNames[field] + ' <- "' + header + '"\n';
+    }
+    
+    console.log(info);
 }
 
 function showImportResult(newCount, updatedCount) {
