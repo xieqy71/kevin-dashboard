@@ -625,8 +625,8 @@ function fetchAllPlatformData() {
                     comments: w.comments,
                     shares: w.shares || 0,
                     rate: w.rate
-                });
-            }
+                };
+            })
         }
     });
 }
