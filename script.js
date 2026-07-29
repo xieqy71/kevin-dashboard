@@ -813,8 +813,8 @@ function initCharts() {
             series: [{ 
                 name: '播放量', 
                 type: 'pie', 
-                radius: ['70%', '88%'], 
-                center: ['35%', '50%'], 
+                radius: ['65%', '85%'], 
+                center: ['40%', '50%'], 
                 itemStyle: { 
                     borderRadius: 2, 
                     borderColor: '#FFFFFF', 
@@ -850,8 +850,24 @@ function initCharts() {
     }
     
     window.addEventListener('resize', function() {
-        if (trendChart) trendChart.resize();
-        if (pieChart) pieChart.resize();
+        setTimeout(function() {
+            if (trendChart) {
+                trendChart.resize();
+            }
+            if (pieChart) {
+                pieChart.resize();
+            }
+        }, 100);
+    });
+    
+    // 页面可见性变化时也重新调整
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            setTimeout(function() {
+                if (trendChart) trendChart.resize();
+                if (pieChart) pieChart.resize();
+            }, 200);
+        }
     });
 }
 
