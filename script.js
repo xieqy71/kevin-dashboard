@@ -813,8 +813,8 @@ function initCharts() {
             series: [{ 
                 name: '播放量', 
                 type: 'pie', 
-                radius: ['65%', '85%'], 
-                center: ['40%', '50%'], 
+                radius: ['50%', '70%'], 
+                center: ['35%', '50%'], 
                 itemStyle: { 
                     borderRadius: 2, 
                     borderColor: '#FFFFFF', 
